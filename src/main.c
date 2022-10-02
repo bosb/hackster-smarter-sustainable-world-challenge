@@ -21,58 +21,58 @@ static void button_changed(uint32_t button_state, uint32_t has_changed) {
     uint32_t buttons = button_state & has_changed;
  
     if (buttons & DK_BTN1_MSK) {
-		printk("Button pressed at %" PRIu32 "\n", k_cycle_get_32());
+        printk("Button pressed at %" PRIu32 "\n", k_cycle_get_32());
         led_value +=1;
-		// jump from all rgb on to r on
-		if (led_value > 7) led_value = 1;
+        // jump from all rgb on to r on
+        if (led_value > 7) led_value = 1;
     }
 }
 
 void main(void) {
-	bool led_is_on = false;
-	struct sensor_value temp, humidity;
+    bool led_is_on = false;
+    struct sensor_value temp, humidity;
 
-	// INIT
-	// temperature sensor
-	const struct device *dev_sensor = device_get_binding(DT_LABEL(DT_INST(0, bosch_bme680)));
-	if (dev_sensor == NULL) {
-		printf("bme688 failed\n");
-	} else {
-		printf("Device %p name is %s\n", dev_sensor, dev_sensor->name);
-	}
-	// USB UART: Thingy usb-c, DK via JTAG
-  	if (usb_enable(NULL) != 0) {
+    // INIT
+    // temperature sensor
+    const struct device *dev_sensor = device_get_binding(DT_LABEL(DT_INST(0, bosch_bme680)));
+    if (dev_sensor == NULL) {
+        printf("bme688 failed\n");
+    } else {
+        printf("Device %p name is %s\n", dev_sensor, dev_sensor->name);
+    }
+    // USB UART: Thingy usb-c, DK via JTAG
+    if (usb_enable(NULL) != 0) {
         printk("Failed to enable USB");
     }
-	// button
+    // button
     if (dk_buttons_init(button_changed) != 0) {
         printk("Cannot init buttons");
     }   
-	// leds
+    // leds
     if (dk_leds_init() != 0) {
         printk("Cannot init LEDs");
     }   
-	printk("INIT finished %s\n", CONFIG_ARCH);
+    printk("INIT finished %s\n", CONFIG_ARCH);
 
-	// repeat every second
-	while (1) {
-		// flash led to indicate running device
-		led_is_on = !led_is_on;
-		if (led_is_on) {
-			dk_set_leds(led_value);
-		} else {
-			dk_set_leds(0);
-		}
+    // repeat every second
+    while (1) {
+        // flash led to indicate running device
+        led_is_on = !led_is_on;
+        if (led_is_on) {
+            dk_set_leds(led_value);
+        } else {
+            dk_set_leds(0);
+        }
 
-		// does not run on DK
-		if (dev_sensor != NULL) {
-			sensor_sample_fetch(dev_sensor);
-          	sensor_channel_get(dev_sensor, SENSOR_CHAN_AMBIENT_TEMP, &temp);
-          	sensor_channel_get(dev_sensor, SENSOR_CHAN_HUMIDITY, &humidity);
+        // does not run on DK
+        if (dev_sensor != NULL) {
+            sensor_sample_fetch(dev_sensor);
+            sensor_channel_get(dev_sensor, SENSOR_CHAN_AMBIENT_TEMP, &temp);
+            sensor_channel_get(dev_sensor, SENSOR_CHAN_HUMIDITY, &humidity);
   
-          	printf("T: %d; H: %d; \n", temp.val1, humidity.val1);
-		}
-		
-		k_msleep(SLEEP_TIME_MS);
-	}
+            printf("T: %d; H: %d; \n", temp.val1, humidity.val1);
+        }
+        
+        k_msleep(SLEEP_TIME_MS);
+    }
 }
